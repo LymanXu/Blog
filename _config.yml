@@ -3,12 +3,12 @@ name: Lyman's Blog
 email: 134196459@163.com
 author: Lyman Xu
 url: https://github.com/LymanXu
-resume_site: https://lymanxu.github.io/
+resume_site: https://github.com/LymanXu/
 github: https://github.com/LymanXu/
 baseurl: "/Blog"
 description: Everyday is different, 一生以歌!
 meta_description: 愿一生以歌投入每天永不变
-motto: 愿一生以歌投入每天永不变 @a little step everyday
+motto: A little step everyday
 banner: 学而不思则罔，思而不学则殆。
 
 #permalink: /:categories/:year/:month/:day/:title/
