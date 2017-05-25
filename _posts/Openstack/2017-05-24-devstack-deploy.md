@@ -89,37 +89,37 @@ tag: openstack搭建
 
 # local.conf文件配置
 
-[[local|localrc]]<br />
-HOST_IP=192.168.56.202<br />
-SERVICE_HOST=192.168.56.202
-MYSQL_HOST=192.168.56.202
-RABBIT_HOST=192.168.56.202
-GLANCE_HOST=192.168.56.202
-ADMIN_PASSWORD=password
-DATABASE_PASSWORD=password
-RABBIT_PASSWORD=password
-SERVICE_PASSWORD=password
-LOGFILE=/opt/stack/logs/stack.sh.log
-VERBOSE=True
-LOG_COLOR=True
-SCREEN_LOGDIR=/opt/stack/logs
-\# Use Neutron instead of nova-network
-disable_service n-net
-enable_service q-svc
-enable_service q-dhcp
-enable_service q-agt
-enable_service q-l3
-enable_service c-api
-enable_service c-vol
-enable_service c-sch
-disable_service n-obj
-disable_service c-bak
-disable_service tempest
-disable_service horizon
-\#\# Neutron options
-Q_USE_SECGROUP=False
-NEUTRON_CREATE_INITIAL_NETWORKS=False
-\# Open vSwitch provider networking configuration
+[[local|localrc]]<br/>
+HOST_IP=192.168.56.202<br/>
+SERVICE_HOST=192.168.56.202<br/>
+MYSQL_HOST=192.168.56.202<br/>
+RABBIT_HOST=192.168.56.202<br/>
+GLANCE_HOST=192.168.56.202<br/>
+ADMIN_PASSWORD=password<br/>
+DATABASE_PASSWORD=password<br/>
+RABBIT_PASSWORD=password<br/>
+SERVICE_PASSWORD=password<br/>
+LOGFILE=/opt/stack/logs/stack.sh.log<br/>
+VERBOSE=True<br/>
+LOG_COLOR=True<br/>
+SCREEN_LOGDIR=/opt/stack/logs<br/>
+\# Use Neutron instead of nova-network<br/>
+disable_service n-net<br/>
+enable_service q-svc<br/>
+enable_service q-dhcp<br/>
+enable_service q-agt<br/>
+enable_service q-l3<br/>
+enable_service c-api<br/>
+enable_service c-vol<br/>
+enable_service c-sch<br/>
+disable_service n-obj<br/>
+disable_service c-bak<br/>
+disable_service tempest<br/>
+disable_service horizon<br/>
+\#\# Neutron options<br/>
+Q_USE_SECGROUP=False<br/>
+NEUTRON_CREATE_INITIAL_NETWORKS=False<br/>
+\# Open vSwitch provider networking configuration<br/>
 
 Q_USE_PROVIDERNET_FOR_PUBLIC=True
 
