@@ -103,7 +103,7 @@ LOGFILE=/opt/stack/logs/stack.sh.log
 VERBOSE=True
 LOG_COLOR=True
 SCREEN_LOGDIR=/opt/stack/logs
-# Use Neutron instead of nova-network
+\# Use Neutron instead of nova-network
 disable_service n-net
 enable_service q-svc
 enable_service q-dhcp
@@ -116,10 +116,10 @@ disable_service n-obj
 disable_service c-bak
 disable_service tempest
 disable_service horizon
-## Neutron options
+\#\# Neutron options
 Q_USE_SECGROUP=False
 NEUTRON_CREATE_INITIAL_NETWORKS=False
-# Open vSwitch provider networking configuration
+\# Open vSwitch provider networking configuration
 
 Q_USE_PROVIDERNET_FOR_PUBLIC=True
 
