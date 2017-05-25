@@ -89,8 +89,8 @@ tag: openstack搭建
 
 # local.conf文件配置
 
-[[local|localrc]]
-HOST_IP=192.168.56.202
+[[local|localrc]]<br />
+HOST_IP=192.168.56.202<br />
 SERVICE_HOST=192.168.56.202
 MYSQL_HOST=192.168.56.202
 RABBIT_HOST=192.168.56.202
