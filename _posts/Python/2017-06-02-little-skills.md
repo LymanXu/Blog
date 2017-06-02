@@ -18,12 +18,12 @@ tag: Skills
 
 对于类似C语言的三元条件表达式condition ? true_part : false_part，虽然Python没有三目运算符(?:)，但也有类似的替代方案，那就是true_part if condition else false_part。
 
-``
->>> "Fire" if True else "Water"  
+
+> "Fire" if True else "Water"  
  'Fire'  
->>> "Fire" if False else "Water"  
+> "Fire" if False else "Water"  
  'Water' 
-``
+
  
 ## For in理解
 
