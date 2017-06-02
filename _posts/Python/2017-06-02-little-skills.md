@@ -21,9 +21,9 @@ tag: Skills
 ``
 >>> "Fire" if True else "Water"  
  'Fire'  
- >>> "Fire" if False else "Water"  
+>>> "Fire" if False else "Water"  
  'Water' 
- ``
+``
  
 ## For in理解
 
