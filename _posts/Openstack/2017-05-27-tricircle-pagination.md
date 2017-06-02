@@ -27,6 +27,11 @@ some patches to implement pod routing cli<br/>
 developer guide pagination的参数<br/>
 [pagination API 参数](https://developer.openstack.org/api-ref/networking/v2/#pagination)<br/>
 
+# Neutron中的分页实现
+## oslo.db底层paginate_query源码 
+github地址[link](https://github.com/openstack/oslo.db/commit/dea700d13e4c152bf1a484b62cc2bce329ef6fa9#diff-7d84830d3af287b534a2f8a6d74e2de5R151)<br/>
+
+
 
 
 
