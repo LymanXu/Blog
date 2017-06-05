@@ -24,7 +24,7 @@ tag: Collection
 
 
 ## 需要注意的method
-*list.pop() and list.remove()*
+**list.pop() and list.remove()**
 
 pop入参索引，默认为-1，remove入参为元素（remove 一次操作移除第一个符合条件的元素）
 ```python
