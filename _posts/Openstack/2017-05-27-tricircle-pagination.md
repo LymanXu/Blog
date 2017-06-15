@@ -13,11 +13,11 @@ tag: 技术文档
 * content
 {:toc}
 
-# 任务
+# 1.任务
 1. implement routing pagination
 2. implemnet async job cli in python-tricircleclient
 
-# 参考资料
+# 2.参考资料
 read neutron pagination source code
 
 refer to pod routing cli implemention in python-tricircleclient<br/>
@@ -27,13 +27,13 @@ some patches to implement pod routing cli<br/>
 developer guide pagination的参数<br/>
 [pagination API 参数](https://developer.openstack.org/api-ref/networking/v2/#pagination)<br/>
 
-# Neutron中的分页实现
-## oslo.db底层paginate_query源码 
+# 3.Neutron中的分页实现
+## 3.1 oslo.db底层paginate_query源码 
 github地址[link](https://github.com/openstack/oslo.db/commit/dea700d13e4c152bf1a484b62cc2bce329ef6fa9#diff-7d84830d3af287b534a2f8a6d74e2de5R151)<br/>
 
 
-# 工作log
-## 参考code
+# 4.工作log
+## 4.1 参考code
 **tricircle中的paginate_query**
 ```python
 central_plugin.py
@@ -145,6 +145,149 @@ central_plugin.py
             return utils.format_api_error(
                 500, _('Failed to show all asynchronous jobs'))
 ```
+可以看到对于jobs的显示，query分别从async_jobs和async_job_logs两张表中进行查询，所以这里要用到union进行两个表的联合查询
+## 4.2 tricircle中记录job信息的表结构
 
-## 技术实现
+登录部署tricircle的机器，进行数据库中表的查看
 
+    stack@stack-VirtualBox:~/devstack$ <font color=#FF0000>mysql -hlocalhost -uroot -p</font>
+    Enter password: 
+    Welcome to the MySQL monitor.  Commands end with ; or \g.
+    Your MySQL connection id is 5
+    Server version: 5.7.18-0ubuntu0.16.04.1 (Ubuntu)
+    
+    Copyright (c) 2000, 2017, Oracle and/or its affiliates. All rights reserved.
+    
+    Oracle is a registered trademark of Oracle Corporation and/or its
+    affiliates. Other names may be trademarks of their respective
+    owners.
+    
+    Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+    
+    mysql> show databases;
+    +--------------------+
+    | Database           |
+    +--------------------+
+    | information_schema |
+    | cinder             |
+    | glance             |
+    | keystone           |
+    | mysql              |
+    | neutron            |
+    | neutron0           |
+    | nova               |
+    | nova_api           |
+    | nova_cell0         |
+    | performance_schema |
+    | sys                |
+    | tricircle          |
+    +--------------------+
+    13 rows in set (0.01 sec)
+    
+    mysql> use tricircle;
+    Reading table information for completion of table and column names
+    You can turn off this feature to get a quicker startup with -A
+    
+    Database changed
+    mysql> show tables;
+    +---------------------+
+    | Tables_in_tricircle |
+    +---------------------+
+    | async_job_logs      |
+    | async_jobs          |
+    | cached_endpoints    |
+    | migrate_version     |
+    | pods                |
+    | resource_routings   |
+    | shadow_agents       |
+    +---------------------+
+    7 rows in set (0.00 sec)
+    mysql> select colmns from async_jobs;
+    ERROR 1054 (42S22): Unknown column 'colmns' in 'field list'
+    mysql> show colmns from async_jobs;
+    ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'colmns from async_jobs' at line 1
+    mysql> show columns from async_jobs;p
+    +-------------+--------------+------+-----+-------------------+-------+
+    | Field       | Type         | Null | Key | Default           | Extra |
+    +-------------+--------------+------+-----+-------------------+-------+
+    | id          | varchar(36)  | NO   | PRI | NULL              |       |
+    | type        | varchar(36)  | YES  | MUL | NULL              |       |
+    | timestamp   | timestamp    | YES  | MUL | CURRENT_TIMESTAMP |       |
+    | status      | varchar(36)  | YES  |     | NULL              |       |
+    | resource_id | varchar(127) | YES  |     | NULL              |       |
+    | extra_id    | varchar(36)  | YES  |     | NULL              |       |
+    | project_id  | varchar(36)  | YES  |     | NULL              |       |
+    +-------------+--------------+------+-----+-------------------+-------+
+    7 rows in set (0.00 sec)
+    
+        -> ;
+    ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'p' at line 1
+    mysql> show columns from async_job_logs;
+    +-------------+--------------+------+-----+-------------------+-------+
+    | Field       | Type         | Null | Key | Default           | Extra |
+    +-------------+--------------+------+-----+-------------------+-------+
+    | id          | varchar(36)  | NO   | PRI | NULL              |       |
+    | resource_id | varchar(127) | YES  |     | NULL              |       |
+    | type        | varchar(36)  | YES  |     | NULL              |       |
+    | timestamp   | timestamp    | YES  | MUL | CURRENT_TIMESTAMP |       |
+    | project_id  | varchar(36)  | YES  |     | NULL              |       |
+    +-------------+--------------+------+-----+-------------------+-------+
+    5 rows in set (0.00 sec)
+    
+    mysql> select * from async_jobs limit 5;
+    Empty set (0.00 sec)
+    
+    mysql> select * from async_job_logs limit 5;
+    +--------------------------------------+---------------------------------------------------------------------------+----------------+---------------------+----------------------------------+
+    | id                                   | resource_id                                                               | type           | timestamp           | project_id                       |
+    +--------------------------------------+---------------------------------------------------------------------------+----------------+---------------------+----------------------------------+
+    | 22e3e24e-0e2e-4e76-b849-644cab4ef56b | 9edb408769274e568598a2686d21b98a                                          | seg_rule_setup | 2017-05-11 22:03:47 | 9edb408769274e568598a2686d21b98a |
+    | 2d12d3ef-3a6d-412c-b86d-d31c6a2234a1 | 9edb408769274e568598a2686d21b98a                                          | seg_rule_setup | 2017-05-11 21:33:18 | 9edb408769274e568598a2686d21b98a |
+    | 360fc298-9fd8-46ac-b3cb-4791bc527262 | 9edb408769274e568598a2686d21b98a                                          | seg_rule_setup | 2017-05-11 21:04:44 | 9edb408769274e568598a2686d21b98a |
+    | 4fd383ad-5957-4160-9404-74d67e210f67 | 322f6920-f82a-427d-88dc-83d6f7d778f9#18e24fdf-d3be-40fc-9f6a-77f40e77b022 | port_delete    | 2017-05-11 21:28:58 | 9edb408769274e568598a2686d21b98a |
+    | 6d059124-aa87-4354-a33f-c6d06bc750cb | 322f6920-f82a-427d-88dc-83d6f7d778f9#d5c02752-5a8b-43ca-996b-542e4ac46e07 | port_delete    | 2017-05-11 21:11:12 | 9edb408769274e568598a2686d21b98a |
+    +--------------------------------------+---------------------------------------------------------------------------+----------------+---------------------+----------------------------------+
+    5 rows in set (0.00 sec)
+    
+    mysql> select id, type, timestamp from async_jobs union select id, type, timestamp from async_job_logs;
+    +--------------------------------------+----------------+---------------------+
+    | id                                   | type           | timestamp           |
+    +--------------------------------------+----------------+---------------------+
+    | 22e3e24e-0e2e-4e76-b849-644cab4ef56b | seg_rule_setup | 2017-05-11 22:03:47 |
+    | 2d12d3ef-3a6d-412c-b86d-d31c6a2234a1 | seg_rule_setup | 2017-05-11 21:33:18 |
+    | 360fc298-9fd8-46ac-b3cb-4791bc527262 | seg_rule_setup | 2017-05-11 21:04:44 |
+    | 4fd383ad-5957-4160-9404-74d67e210f67 | port_delete    | 2017-05-11 21:28:58 |
+    | 6d059124-aa87-4354-a33f-c6d06bc750cb | port_delete    | 2017-05-11 21:11:12 |
+    | 9bb65105-7d5f-403c-ac8d-77347dda4433 | port_delete    | 2017-05-11 20:43:38 |
+    | 9e4f5ecc-8d60-45d4-8b79-5d5fc4fac201 | port_delete    | 2017-05-11 21:04:45 |
+    | a616c73a-e93a-4823-baad-2f6d970de983 | port_delete    | 2017-05-11 21:09:19 |
+    | ab9e7848-c7e8-4a53-9915-a487e103bed5 | seg_rule_setup | 2017-05-11 21:11:11 |
+    | ba4d6ba6-b3db-4924-9b3b-059640dee567 | seg_rule_setup | 2017-05-11 21:09:18 |
+    | bd1b6c5b-9e8b-49c8-8016-54e96112220c | seg_rule_setup | 2017-05-11 21:28:57 |
+    | c1849f1a-a163-46b1-9420-415d812b6e29 | seg_rule_setup | 2017-05-11 20:43:37 |
+    | c1ee4da2-92cb-482e-9ed7-fa209129f626 | port_delete    | 2017-05-11 21:55:40 |
+    | c61f6a25-5144-427f-85d5-6913547a5ebd | port_delete    | 2017-05-11 21:33:19 |
+    | d1644eb9-0bfd-408f-842a-4b011dc1b8d9 | port_delete    | 2017-05-11 22:03:47 |
+    | e4b7df12-e197-4327-b546-9f53e22fb545 | seg_rule_setup | 2017-05-11 20:46:31 |
+    | fb968073-18f6-405b-a571-794dd02b93f3 | seg_rule_setup | 2017-05-11 21:55:39 |
+    +--------------------------------------+----------------+---------------------+
+    17 rows in set (0.00 sec)
+    
+    mysql> select id, type, timestamp from async_jobs union select id, type, timestamp from async_job_logs limit 8;
+    +--------------------------------------+----------------+---------------------+
+    | id                                   | type           | timestamp           |
+    +--------------------------------------+----------------+---------------------+
+    | 22e3e24e-0e2e-4e76-b849-644cab4ef56b | seg_rule_setup | 2017-05-11 22:03:47 |
+    | 2d12d3ef-3a6d-412c-b86d-d31c6a2234a1 | seg_rule_setup | 2017-05-11 21:33:18 |
+    | 360fc298-9fd8-46ac-b3cb-4791bc527262 | seg_rule_setup | 2017-05-11 21:04:44 |
+    | 4fd383ad-5957-4160-9404-74d67e210f67 | port_delete    | 2017-05-11 21:28:58 |
+    | 6d059124-aa87-4354-a33f-c6d06bc750cb | port_delete    | 2017-05-11 21:11:12 |
+    | 9bb65105-7d5f-403c-ac8d-77347dda4433 | port_delete    | 2017-05-11 20:43:38 |
+    | 9e4f5ecc-8d60-45d4-8b79-5d5fc4fac201 | port_delete    | 2017-05-11 21:04:45 |
+    | a616c73a-e93a-4823-baad-2f6d970de983 | port_delete    | 2017-05-11 21:09:19 |
+    +--------------------------------------+----------------+---------------------+
+    8 rows in set (0.00 sec)
+    
+    mysql> select * from async_jobs union select * from async_job_logs limit 8;
+    ERROR 1222 (21000): The used SELECT statements have a different number of columns
+    mysql> 
