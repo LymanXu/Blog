@@ -150,7 +150,7 @@ central_plugin.py
 
 登录部署tricircle的机器，进行数据库中表的查看
 
-    stack@stack-VirtualBox:~/devstack$ <font color=#FF0000>mysql -hlocalhost -uroot -p</font>
+    stack@stack-VirtualBox:~/devstack$ mysql -hlocalhost -uroot -p
     Enter password: 
     Welcome to the MySQL monitor.  Commands end with ; or \g.
     Your MySQL connection id is 5
@@ -291,3 +291,34 @@ central_plugin.py
     mysql> select * from async_jobs union select * from async_job_logs limit 8;
     ERROR 1222 (21000): The used SELECT statements have a different number of columns
     mysql> 
+    
+通过对表结构的查询可以看出，对于union操作两张表，只能选取到的columns为：</br>
+id, type, timestamp, resource_id, project_id 这5个columns
+
+## 4.3 python中sqlalchemy的简单理解和union使用
+项目中的sqlalchemy的参考操作语句
+
+     def _select_dhcp_ips_for_network_ids(self, context, network_ids):
+            if not network_ids:
+                return {}
+            query = context.session.query(models_v2.Port.mac_address,
+                                          models_v2.Port.network_id,
+                                          models_v2.IPAllocation.ip_address)
+            query = query.join(models_v2.IPAllocation)
+            query = query.filter(models_v2.Port.network_id.in_(network_ids))
+            owner = const.DEVICE_OWNER_DHCP
+            query = query.filter(models_v2.Port.device_owner == owner)
+            ips = {}
+    
+            for network_id in network_ids:
+                ips[network_id] = []
+    
+            for mac_address, network_id, ip in query:
+                if (netaddr.IPAddress(ip).version == 6
+                    and not netaddr.IPAddress(ip).is_link_local()):
+                    ip = str(netutils.get_ipv6_addr_by_EUI64(const.IPv6_LLA_PREFIX,
+                        mac_address))
+                if ip not in ips[network_id]:
+                    ips[network_id].append(ip)
+    
+            return ips
