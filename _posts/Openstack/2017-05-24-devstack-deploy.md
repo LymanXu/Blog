@@ -7,7 +7,7 @@ date:   2017-05-24 23:00:00 +0800
 #大类配置
 categories: Openstack
 #小类配置
-tag: openstack搭建
+tag: Openstack搭建
 ---
 
 * content

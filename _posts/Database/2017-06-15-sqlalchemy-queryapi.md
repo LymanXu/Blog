@@ -7,7 +7,7 @@ date:   2017-06-15 15:53:00 +0800
 #大类配置
 categories: Database
 #小类配置
-tag: sqlalchemy
+tag: Sqlalchemy
 ---
 
 * content
