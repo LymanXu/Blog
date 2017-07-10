@@ -1,13 +1,13 @@
 ---
 layout: post
 #标题配置
-title:  Tricircle pagination 分页问题
+title:  Tricircle pagination 分页问题(一)
 #时间配置
 date:   2017-05-27 10:49:00 +0800
 #大类配置
 categories: Tricircle
 #小类配置
-tag: 技术文档
+tag: Development notes
 ---
 
 * content
