@@ -3,7 +3,7 @@ layout: post
 #标题配置
 title:  Python中Mysql数据库适配器mysqldb的使用
 #时间配置
-date:   2017-07-1７ 11:00:00 +0800
+date:   2017-07-17 11:00:00 +0800
 #大类配置
 categories: Database
 #小类配置
