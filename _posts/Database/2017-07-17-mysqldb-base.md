@@ -235,3 +235,9 @@ Process finished with exit code 0
 
 ```
 注：<br/>
+对于main（）函数中的drop()注释掉后
+
+1. 将main()中的commit()注释掉后，Python Control中的输出结果一样，不过数据库中user表中的记录为空（mytest1,user数据库－表存在）
+2. 去掉注释使用commit()后，Python Control输出结果一样，数据库中user表中的数据存在
+
+说明在没有commit()之前时，sql的相关记录应该存在内存中，通过commit刷新后持久化到数据库中（需要深入了解）
