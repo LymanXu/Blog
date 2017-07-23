@@ -24,7 +24,7 @@ Python是个动态语言，很多问题都无法通过静态编译检查来发�
 [**tox单元测试过程&如何配置**](https://blog.apporc.org/2016/08/python-%E5%8D%95%E5%85%83%E6%B5%8B%E8%AF%95%E5%B7%A5%E5%85%B7-tox/)<br/>
 [**单元测试工具介绍**](http://www.tuicool.com/articles/UnQbyyv)<br/>
 tox 用来管理和构建不同类型单元测试所需要的环境，如py27依赖一些库的环境，py35,pypy
-## 2.2 tox pypy error
+## 2.1 tox pypy error
 ```buildoutcfg
 sudo add-apt-repository ppa:pypy/ppa
 sudo apt-get update
@@ -32,5 +32,14 @@ sudo apt-get update
 sudo apt-get install pypy pypy-dev
 ```
 
+## 2.2 tricircle在线部署测试
+1. 将开发代码cp到tricircle节点的 /opt/stack/tricircle
+2. 重启appach 服务
+3. source openrc admin admin 
+4. 获取token(openstack token issue), token=$(openstack --os-region-name CentralRegion token issue | awk 'NR==5 {print $4}')
+5. 测试代码　curl -X GET http://127.0.0.1/tricircle/v1.0/jobs?status=new  -H "Content-Type: application/json"  -H "X-Auth-Token: $token"　
 
+　　多个参数时　jobs?status=new\&resource_type=port
    
+   安装json格式化，sudo apt-get install jp<br/>
+   查看结果在curl 语句末尾加上　| jp
