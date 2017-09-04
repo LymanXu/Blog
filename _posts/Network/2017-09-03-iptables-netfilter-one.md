@@ -34,11 +34,13 @@ NF_IP_POST_ROUTING: This hook is triggered by any outgoing or forwarded traffic 
 
 现在对hooks和表、链的概念依然有些模糊，通过数据在协议中的发送过程可以更好的了解.
 数据在协议栈里的发送过程中，从上至下依次是“加头”的过程接受数据方就是个“剥头”的过程，最终到达用户那儿的就是裸数据了。
+
 ![协议栈的5个关键点]({{'/styles/images/Python/2017-09-03-iptables-netfilter-one-01.png' | prepend: site.baseurl }})
 
 对于收到的每个数据包，都从“A”点进来，经过路由判决，如果是发送给本机的就经过“B”点，然后往协议栈的上层继续传递；否则，如果该数据包的目的地是不本机，那么就经过“C”点，然后顺着“E”点将该包转发出去。
 对于发送的每个数据包，首先也有一个路由判决，以确定该包是从哪个接口出去，然后经过“D”点，最后也是顺着“E”点将该包发送出去。
 协议栈那五个关键点A，B，C，D和E就是netfilter hooks作用的地方。
+
 ![For in 数组赋值]({{'/styles/images/Python/2017-09-03-iptables-netfilter-one-02.png' | prepend: site.baseurl }})
 
 Netfilter 将这几个地方的hooks重新定义了名称。
