@@ -1,7 +1,7 @@
 ---
 layout: post
 #标题配置
-title:  Distributed System--(1)
+title:  Distributed System(1)--大端小端&rpc
 #时间配置
 date:   2017-10-13 15:05:00 +0800
 #大类配置
@@ -75,3 +75,25 @@ using API stubs on the client and server ,(存根)
 
 ### 2.2.5 how to write stubs
 using an IDL -- interface definition language
+
+# 3. The process of  Remote Procedure Calls
+Client:
+
+1. The client procedure calls the client stub in the normal way.
+2. The client stub builds a message and calls the local operating system.
+3. The client’s OS sends the message to the remote OS.
+
+Server:
+
+1. The remote OS gives the message to the server stub.
+2. The server stub unpacks the parameters and calls the server.
+3. The server does the work and returns the result to the stub.
+4. The server stub packs it in a message and calls its local OS.
+5. The server’s OS sends the message to the client’s OS.
+6. The client’s OS gives the message to the client stub.
+
+Client:
+
+1. The stub unpacks the result and returns to the client.
+
+![通过RPC的远程计算]({{'/styles/images/Distribute/2017-10-14-distributed-system-1-02.png' | prepend: site.baseurl }})
