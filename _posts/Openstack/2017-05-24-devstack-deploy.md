@@ -144,3 +144,18 @@ ENABLED_SERVICES+=,octavia,o-cw,o-hk,o-hm,o-api
 注意点:
 1.  (注意这里的bridge-mapping要和下面的vlan对应)
 2. 在=后面千万不要有空格
+
+# 
+
+linux添加和删除virtual ip
+网卡上增加一个IP：
+ifconfig eth0:1 192.168.0.1 netmask 255.255.255.0
+
+删除网卡的一个IP地址:
+ip addr del 192.168.0.1 dev eth0
+
+virtual network interface虚拟网卡的添加删除
+查看ip
+ip -o -f inet addr show
+
+ifconfig tunl0 down

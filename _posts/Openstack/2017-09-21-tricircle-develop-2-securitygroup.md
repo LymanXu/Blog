@@ -22,7 +22,7 @@ tag: Development notes
 * config sg的异步任务的处理逻辑是什么
 
 # 1.2 RegionOne' sg and CentralRegion's sg
-一个安装了siglepod的vm上发现数据库有两个neutron;neutron and neutron0
+siglepod中创建了CentralRegion and RegionOne,　上发现数据库有两个neutron;neutron and neutron0（以及nova）
 ```buildoutcfg
 mysql> show databases;
 +--------------------+
@@ -43,188 +43,92 @@ mysql> show databases;
 | tricircle          |
 +--------------------+
 ```
-数据库neutron and neutron0的数据结构是相同的，应该是对应两个pod.Right????
+# 1.2.1 neurtron0对应CentralRegion,neutron对应RegionOne
+1. CentralRegion中的default sg,RegionOne中也有，而且具有相同的id和内容
+2. CentralRegion中的rules，对于有remote_group_id的转化成remote_id_prefix,对于IPv6的不处理
+
+通过下面的指令可以证明
 ```buildoutcfg
+[stack@stack-node2:~/devstack]$neutron --os-region-name=CentralRegion security-group-list
+neutron CLI is deprecated and will be removed in the future. Use openstack CLI instead.
++--------------------------------------+---------+----------------------------------+----------------------------------------------------------------------+
+| id                                   | name    | tenant_id                        | security_group_rules                                                 |
++--------------------------------------+---------+----------------------------------+----------------------------------------------------------------------+
+| 17679411-f76c-4f7d-8831-af62c04ac901 | default | bb4349673696463bbc06218055ea37b3 | egress, IPv4                                                         |
+|                                      |         |                                  | egress, IPv6                                                         |
+|                                      |         |                                  | ingress, IPv4, remote_group_id: 17679411-f76c-4f7d-8831-af62c04ac901 |
+|                                      |         |                                  | ingress, IPv6, remote_group_id: 17679411-f76c-4f7d-8831-af62c04ac901 |
++--------------------------------------+---------+----------------------------------+----------------------------------------------------------------------+
+[stack@stack-node2:~/devstack]$neutron --os-region-name=RegionOne security-group-list
+neutron CLI is deprecated and will be removed in the future. Use openstack CLI instead.
++--------------------------------------+---------+----------------------------------+----------------------------------------------------------------------+
+| id                                   | name    | tenant_id                        | security_group_rules                                                 |
++--------------------------------------+---------+----------------------------------+----------------------------------------------------------------------+
+| 17679411-f76c-4f7d-8831-af62c04ac901 | default | bb4349673696463bbc06218055ea37b3 | egress, IPv4                                                         |
+|                                      |         |                                  | egress, IPv6                                                         |
+|                                      |         |                                  | ingress, IPv4, remote_ip_prefix: 10.0.0.0/24                         |
+| ff60b1cf-8bf6-42dc-85bb-f3c0c22b97eb | default | bb4349673696463bbc06218055ea37b3 | egress, IPv4                                                         |
+|                                      |         |                                  | egress, IPv6                                                         |
+|                                      |         |                                  | ingress, IPv4, remote_group_id: ff60b1cf-8bf6-42dc-85bb-f3c0c22b97eb |
+|                                      |         |                                  | ingress, IPv6, remote_group_id: ff60b1cf-8bf6-42dc-85bb-f3c0c22b97eb |
++--------------------------------------+---------+----------------------------------+----------------------------------------------------------------------+
+
 mysql> use neutron;
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+mysql> select * from securitygroups;
++----------------------------------+--------------------------------------+---------+------------------+
+| project_id                       | id                                   | name    | standard_attr_id |
++----------------------------------+--------------------------------------+---------+------------------+
+| bb4349673696463bbc06218055ea37b3 | 17679411-f76c-4f7d-8831-af62c04ac901 | default |               15 |
+| bb4349673696463bbc06218055ea37b3 | ff60b1cf-8bf6-42dc-85bb-f3c0c22b97eb | default |                6 |
++----------------------------------+--------------------------------------+---------+------------------+
+2 rows in set (0.00 sec)
+
+mysql> use neutron0;
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
 
 Database changed
-mysql> show tables;
-+-----------------------------------------+
-| Tables_in_neutron                       |
-+-----------------------------------------+
-| address_scopes                          |
-| agents                                  |
-| alembic_version                         |
-| allowedaddresspairs                     |
-| arista_provisioned_nets                 |
-| arista_provisioned_tenants              |
-| arista_provisioned_vms                  |
-| auto_allocated_topologies               |
-| bgp_peers                               |
-| bgp_speaker_dragent_bindings            |
-| bgp_speaker_network_bindings            |
-| bgp_speaker_peer_bindings               |
-| bgp_speakers                            |
-| brocadenetworks                         |
-| brocadeports                            |
-| cisco_csr_identifier_map                |
-| cisco_hosting_devices                   |
-| cisco_ml2_apic_contracts                |
-| cisco_ml2_apic_host_links               |
-| cisco_ml2_apic_names                    |
-| cisco_ml2_n1kv_network_bindings         |
-| cisco_ml2_n1kv_network_profiles         |
-| cisco_ml2_n1kv_policy_profiles          |
-| cisco_ml2_n1kv_port_bindings            |
-| cisco_ml2_n1kv_profile_bindings         |
-| cisco_ml2_n1kv_vlan_allocations         |
-| cisco_ml2_n1kv_vxlan_allocations        |
-| cisco_ml2_nexus_nve                     |
-| cisco_ml2_nexusport_bindings            |
-| cisco_port_mappings                     |
-| cisco_router_mappings                   |
-| consistencyhashes                       |
-| default_security_group                  |
-| dnsnameservers                          |
-| dvr_host_macs                           |
-| externalnetworks                        |
-| extradhcpopts                           |
-| firewall_policies                       |
-| firewall_rules                          |
-| firewalls                               |
-| flavors                                 |
-| flavorserviceprofilebindings            |
-| floatingipdnses                         |
-| floatingips                             |
-| ha_router_agent_port_bindings           |
-| ha_router_networks                      |
-| ha_router_vrid_allocations              |
-| healthmonitors                          |
-| ikepolicies                             |
-| ipallocationpools                       |
-| ipallocations                           |
-| ipamallocationpools                     |
-| ipamallocations                         |
-| ipamsubnets                             |
-| ipsec_site_connections                  |
-| ipsecpeercidrs                          |
-| ipsecpolicies                           |
-| logs                                    |
-| lsn                                     |
-| lsn_port                                |
-| maclearningstates                       |
-| members                                 |
-| meteringlabelrules                      |
-| meteringlabels                          |
-| ml2_brocadenetworks                     |
-| ml2_brocadeports                        |
-| ml2_distributed_port_bindings           |
-| ml2_flat_allocations                    |
-| ml2_geneve_allocations                  |
-| ml2_geneve_endpoints                    |
-| ml2_gre_allocations                     |
-| ml2_gre_endpoints                       |
-| ml2_nexus_vxlan_allocations             |
-| ml2_nexus_vxlan_mcast_groups            |
-| ml2_port_binding_levels                 |
-| ml2_port_bindings                       |
-| ml2_ucsm_port_profiles                  |
-| ml2_vlan_allocations                    |
-| ml2_vxlan_allocations                   |
-| ml2_vxlan_endpoints                     |
-| multi_provider_networks                 |
-| networkconnections                      |
-| networkdhcpagentbindings                |
-| networkdnsdomains                       |
-| networkgatewaydevicereferences          |
-| networkgatewaydevices                   |
-| networkgateways                         |
-| networkqueuemappings                    |
-| networkrbacs                            |
-| networks                                |
-| networksecuritybindings                 |
-| networksegments                         |
-| neutron_nsx_network_mappings            |
-| neutron_nsx_port_mappings               |
-| neutron_nsx_router_mappings             |
-| neutron_nsx_security_group_mappings     |
-| nexthops                                |
-| nsxv_edge_dhcp_static_bindings          |
-| nsxv_edge_vnic_bindings                 |
-| nsxv_firewall_rule_bindings             |
-| nsxv_internal_edges                     |
-| nsxv_internal_networks                  |
-| nsxv_port_index_mappings                |
-| nsxv_port_vnic_mappings                 |
-| nsxv_router_bindings                    |
-| nsxv_router_ext_attributes              |
-| nsxv_rule_mappings                      |
-| nsxv_security_group_section_mappings    |
-| nsxv_spoofguard_policy_network_mappings |
-| nsxv_tz_network_bindings                |
-| nsxv_vdr_dhcp_bindings                  |
-| nuage_net_partition_router_mapping      |
-| nuage_net_partitions                    |
-| nuage_provider_net_bindings             |
-| nuage_subnet_l2dom_mapping              |
-| poolloadbalanceragentbindings           |
-| poolmonitorassociations                 |
-| pools                                   |
-| poolstatisticss                         |
-| portbindingports                        |
-| portdataplanestatuses                   |
-| portdnses                               |
-| portqueuemappings                       |
-| ports                                   |
-| portsecuritybindings                    |
-| providerresourceassociations            |
-| provisioningblocks                      |
-| qos_bandwidth_limit_rules               |
-| qos_dscp_marking_rules                  |
-| qos_minimum_bandwidth_rules             |
-| qos_network_policy_bindings             |
-| qos_policies                            |
-| qos_policies_default                    |
-| qos_port_policy_bindings                |
-| qospolicyrbacs                          |
-| qosqueues                               |
-| quotas                                  |
-| quotausages                             |
-| reservations                            |
-| resourcedeltas                          |
-| router_extra_attributes                 |
-| routerl3agentbindings                   |
-| routerports                             |
-| routerroutes                            |
-| routerrules                             |
-| routers                                 |
-| securitygroupportbindings               |
-| securitygrouprules                      |
-| securitygroups                          |
-| segmenthostmappings                     |
-| serviceprofiles                         |
-| sessionpersistences                     |
-| standardattributes                      |
-| subnet_service_types                    |
-| subnetpoolprefixes                      |
-| subnetpools                             |
-| subnetroutes                            |
-| subnets                                 |
-| subports                                |
-| tags                                    |
-| trunks                                  |
-| tz_network_bindings                     |
-| vcns_router_bindings                    |
-| vips                                    |
-| vpnservices                             |
-+-----------------------------------------+
-165 rows in set (0.00 sec)
+mysql> select * from securitygroups;
++----------------------------------+--------------------------------------+---------+------------------+
+| project_id                       | id                                   | name    | standard_attr_id |
++----------------------------------+--------------------------------------+---------+------------------+
+| bb4349673696463bbc06218055ea37b3 | 17679411-f76c-4f7d-8831-af62c04ac901 | default |                8 |
++----------------------------------+--------------------------------------+---------+------------------+
 
 ```
+# 1.2.2 neutron数据库中有default_security_group
+CentralRegion's security_group有一个对应neutron0中的default_security_group’s one row;
+RegionOne‘s security_group has two 对应neutron0中的default_security_group’s one row 和自身neutron中的default_security_group’s one row，所以sg中有两个default_sg;
 
-查询数据库tricircle中维护的security group的信息
 ```buildoutcfg
-mysql> use tricircle;
+mysql> use neutron0;
+Database changed
+
+mysql> select * from default_security_group;
++----------------------------------+--------------------------------------+
+| project_id                       | security_group_id                    |
++----------------------------------+--------------------------------------+
+| bb4349673696463bbc06218055ea37b3 | 17679411-f76c-4f7d-8831-af62c04ac901 |
++----------------------------------+--------------------------------------+
+
+mysql> use neutron;
+mysql> select * from default_security_group;
++----------------------------------+--------------------------------------+
+| project_id                       | security_group_id                    |
++----------------------------------+--------------------------------------+
+| bb4349673696463bbc06218055ea37b3 | ff60b1cf-8bf6-42dc-85bb-f3c0c22b97eb |
++----------------------------------+--------------------------------------+
+
+
+```
+# 1.2.3数据库tricircle中维护的security group top-bottom的对应信息
+```buildoutcfg
+mysql> use tricircle
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
 Database changed
 mysql> show tables;
 +---------------------+
@@ -239,128 +143,23 @@ mysql> show tables;
 | resource_routings   |
 | shadow_agents       |
 +---------------------+
+8 rows in set (0.00 sec)
 
 mysql> select * from resource_routings where resource_type='security_group';
 +----+--------------------------------------+--------------------------------------+--------------------------------------+----------------------------------+----------------+---------------------+------------+
 | id | top_id                               | bottom_id                            | pod_id                               | project_id                       | resource_type  | created_at          | updated_at |
 +----+--------------------------------------+--------------------------------------+--------------------------------------+----------------------------------+----------------+---------------------+------------+
-|  7 | 383b75ab-5b6a-4985-b3cf-41fa70fec3cb | 383b75ab-5b6a-4985-b3cf-41fa70fec3cb | 87ae2008-d3fa-4800-bfab-86b69dc44241 | 3787a7ad3f9f45c599647b190e4bcbc9 | security_group | 2017-09-20 05:27:01 | NULL       |
+|  7 | 17679411-f76c-4f7d-8831-af62c04ac901 | 17679411-f76c-4f7d-8831-af62c04ac901 | 0e5c9ad4-f103-4184-9d88-c2dd38de33e6 | bb4349673696463bbc06218055ea37b3 | security_group | 2017-10-18 07:12:59 | NULL       |
 +----+--------------------------------------+--------------------------------------+--------------------------------------+----------------------------------+----------------+---------------------+------------+
-发现resource_routings中只有一个安全组，bottom__id和　pod_id接下来有用
+1 row in set (0.00 sec)
 
 mysql> select * from pods;
 +--------------------------------------+---------------+-------------+---------+---------+
 | pod_id                               | region_name   | pod_az_name | dc_name | az_name |
 +--------------------------------------+---------------+-------------+---------+---------+
-| 87ae2008-d3fa-4800-bfab-86b69dc44241 | RegionOne     |             |         | az1     |
-| e6edcd4b-7085-4c4f-b4c4-7d61eb060fcf | CentralRegion |             |         |         |
+| 0e5c9ad4-f103-4184-9d88-c2dd38de33e6 | RegionOne     |             |         | az1     |
+| 76b2054b-5679-4cdd-a555-6934051275b0 | CentralRegion |             |         |         |
 +--------------------------------------+---------------+-------------+---------+---------+
-
-```
-
-查询数据库neutron中关于security groups的信息
-```buildoutcfg
-mysql> use neutron;
-
-mysql> select * from securitygroups;
-+----------------------------------+--------------------------------------+---------+------------------+
-| project_id                       | id                                   | name    | standard_attr_id |
-+----------------------------------+--------------------------------------+---------+------------------+
-| 3787a7ad3f9f45c599647b190e4bcbc9 | 383b75ab-5b6a-4985-b3cf-41fa70fec3cb | default |               15 |
-| 3787a7ad3f9f45c599647b190e4bcbc9 | 8b09c296-ff1a-492b-a385-561c1b4e4b64 | default |                6 |
-+----------------------------------+--------------------------------------+---------+------------------+
-
-mysql> select * from default_security_group;
-+----------------------------------+--------------------------------------+
-| project_id                       | security_group_id                    |
-+----------------------------------+--------------------------------------+
-| 3787a7ad3f9f45c599647b190e4bcbc9 | 8b09c296-ff1a-492b-a385-561c1b4e4b64 |
-+----------------------------------+--------------------------------------+
-
-mysql> select * from securitygrouprules;
-+----------------------------------+--------------------------------------+--------------------------------------+-----------------+-----------+-----------+----------+----------------+----------------+------------------+------------------+
-| project_id                       | id                                   | security_group_id                    | remote_group_id | direction | ethertype | protocol | port_range_min | port_range_max | remote_ip_prefix | standard_attr_id |
-+----------------------------------+--------------------------------------+--------------------------------------+-----------------+-----------+-----------+----------+----------------+----------------+------------------+------------------+
-| 3787a7ad3f9f45c599647b190e4bcbc9 | 7ad4e4a1-1f9c-4367-abaf-354f983f5c4c | 383b75ab-5b6a-4985-b3cf-41fa70fec3cb | NULL            | egress    | IPv4      | NULL     |           NULL |           NULL | NULL             |               16 |
-| 3787a7ad3f9f45c599647b190e4bcbc9 | 7fe6d23d-3ca0-4de4-8465-1ab692b992d3 | 383b75ab-5b6a-4985-b3cf-41fa70fec3cb | NULL            | ingress   | IPv4      | icmp     |           NULL |           NULL | 0.0.0.0/0        |               20 |
-| 3787a7ad3f9f45c599647b190e4bcbc9 | 8382d48d-beb8-41e3-8231-14fe308ab23c | 8b09c296-ff1a-492b-a385-561c1b4e4b64 | NULL            | egress    | IPv4      | NULL     |           NULL |           NULL | NULL             |                8 |
-| 3787a7ad3f9f45c599647b190e4bcbc9 | c5f12f46-2503-4526-9662-32890a473ed7 | 383b75ab-5b6a-4985-b3cf-41fa70fec3cb | NULL            | egress    | IPv6      | NULL     |           NULL |           NULL | NULL             |               17 |
-| 3787a7ad3f9f45c599647b190e4bcbc9 | ceb6d629-47d0-4388-9f2d-bba3ccc6b9fe | 8b09c296-ff1a-492b-a385-561c1b4e4b64 | NULL            | egress    | IPv6      | NULL     |           NULL |           NULL | NULL             |               10 |
-| 7480c987587f418c81f328316eb6481b | ffe6dbbf-8f47-461d-a5cf-2196e36634d9 | 383b75ab-5b6a-4985-b3cf-41fa70fec3cb | NULL            | ingress   | IPv4      | NULL     |           NULL |           NULL | 10.0.0.0/24      |               19 |
-+----------------------------------+--------------------------------------+--------------------------------------+-----------------+-----------+-----------+----------+----------------+----------------+------------------+------------------+
-
-```
-
-查询数据库neutron0中关于security group的信息(对应CentralRegion)
-```buildoutcfg
-mysql> use neutron0;
-
-mysql> select * from securitygroups;
-+----------------------------------+--------------------------------------+---------+------------------+
-| project_id                       | id                                   | name    | standard_attr_id |
-+----------------------------------+--------------------------------------+---------+------------------+
-| 3787a7ad3f9f45c599647b190e4bcbc9 | 383b75ab-5b6a-4985-b3cf-41fa70fec3cb | default |                8 |
-+----------------------------------+--------------------------------------+---------+------------------+
-
-mysql> select * from default_security_group;
-+----------------------------------+--------------------------------------+
-| project_id                       | security_group_id                    |
-+----------------------------------+--------------------------------------+
-| 3787a7ad3f9f45c599647b190e4bcbc9 | 383b75ab-5b6a-4985-b3cf-41fa70fec3cb |
-+----------------------------------+--------------------------------------+
-
-mysql> select * from securitygrouprules;
-+----------------------------------+--------------------------------------+--------------------------------------+--------------------------------------+-----------+-----------+----------+----------------+----------------+------------------+------------------+
-| project_id                       | id                                   | security_group_id                    | remote_group_id                      | direction | ethertype | protocol | port_range_min | port_range_max | remote_ip_prefix | standard_attr_id |
-+----------------------------------+--------------------------------------+--------------------------------------+--------------------------------------+-----------+-----------+----------+----------------+----------------+------------------+------------------+
-| 3787a7ad3f9f45c599647b190e4bcbc9 | 791cc717-3a7d-4148-9c2c-b20b8bbd7681 | 383b75ab-5b6a-4985-b3cf-41fa70fec3cb | NULL                                 | egress    | IPv4      | NULL     |           NULL |           NULL | NULL             |               10 |
-| 3787a7ad3f9f45c599647b190e4bcbc9 | 7e5fbc92-708c-433e-99ce-95e4a2326b5f | 383b75ab-5b6a-4985-b3cf-41fa70fec3cb | 383b75ab-5b6a-4985-b3cf-41fa70fec3cb | ingress   | IPv6      | NULL     |           NULL |           NULL | NULL             |               11 |
-| 3787a7ad3f9f45c599647b190e4bcbc9 | 8b1a9484-9542-49ff-aa47-0cb23130306d | 383b75ab-5b6a-4985-b3cf-41fa70fec3cb | 383b75ab-5b6a-4985-b3cf-41fa70fec3cb | ingress   | IPv4      | NULL     |           NULL |           NULL | NULL             |                9 |
-| 3787a7ad3f9f45c599647b190e4bcbc9 | 9e6ef456-ee80-45df-bf68-fc25219a67a3 | 383b75ab-5b6a-4985-b3cf-41fa70fec3cb | NULL                                 | ingress   | IPv4      | icmp     |           NULL |           NULL | 0.0.0.0/0        |               13 |
-| 3787a7ad3f9f45c599647b190e4bcbc9 | bbfba375-0bd2-4945-a0f0-6e0d76b31a9b | 383b75ab-5b6a-4985-b3cf-41fa70fec3cb | NULL                                 | egress    | IPv6      | NULL     |           NULL |           NULL | NULL             |               12 |
-+----------------------------------+--------------------------------------+--------------------------------------+--------------------------------------+-----------+-----------+----------+----------------+----------------+------------------+------------------+
-
-```
-在数据库tricircle-resource_routings表中的security group记录，在neutron,neutron0中的security group都存在，也就是tricircle中维持的各个pod中都有；neurtron0对应CentralRegion,neutron对应RegionOne
-
-通过openstack security group查询不同region's security group
-```buildoutcfg
-stack@stack:~/devstack$ openstack --os-region-name=CentralRegion security group list
-+--------------------------------------+---------+------------------------+----------------------------------+
-| ID                                   | Name    | Description            | Project                          |
-+--------------------------------------+---------+------------------------+----------------------------------+
-| 383b75ab-5b6a-4985-b3cf-41fa70fec3cb | default | Default security group | 3787a7ad3f9f45c599647b190e4bcbc9 |
-+--------------------------------------+---------+------------------------+----------------------------------+
-stack@stack:~/devstack$ openstack security group list
-+--------------------------------------+---------+------------------------+----------------------------------+
-| ID                                   | Name    | Description            | Project                          |
-+--------------------------------------+---------+------------------------+----------------------------------+
-| 383b75ab-5b6a-4985-b3cf-41fa70fec3cb | default | Default security group | 3787a7ad3f9f45c599647b190e4bcbc9 |
-| 8b09c296-ff1a-492b-a385-561c1b4e4b64 | default | Default security group | 3787a7ad3f9f45c599647b190e4bcbc9 |
-+--------------------------------------+---------+------------------------+----------------------------------+
-
-stack@stack:~/devstack$ openstack security group rule list
-+--------------------------------------+-------------+-------------+------------+-----------------------+--------------------------------------+
-| ID                                   | IP Protocol | IP Range    | Port Range | Remote Security Group | Security Group                       |
-+--------------------------------------+-------------+-------------+------------+-----------------------+--------------------------------------+
-| 7ad4e4a1-1f9c-4367-abaf-354f983f5c4c | None        | None        |            | None                  | 383b75ab-5b6a-4985-b3cf-41fa70fec3cb |
-| 7fe6d23d-3ca0-4de4-8465-1ab692b992d3 | icmp        | 0.0.0.0/0   |            | None                  | 383b75ab-5b6a-4985-b3cf-41fa70fec3cb |
-| 8382d48d-beb8-41e3-8231-14fe308ab23c | None        | None        |            | None                  | 8b09c296-ff1a-492b-a385-561c1b4e4b64 |
-| c5f12f46-2503-4526-9662-32890a473ed7 | None        | None        |            | None                  | 383b75ab-5b6a-4985-b3cf-41fa70fec3cb |
-| ceb6d629-47d0-4388-9f2d-bba3ccc6b9fe | None        | None        |            | None                  | 8b09c296-ff1a-492b-a385-561c1b4e4b64 |
-| ffe6dbbf-8f47-461d-a5cf-2196e36634d9 | None        | 10.0.0.0/24 |            | None                  | 383b75ab-5b6a-4985-b3cf-41fa70fec3cb |
-+--------------------------------------+-------------+-------------+------------+-----------------------+--------------------------------------+
-stack@stack:~/devstack$ openstack --os-region-name=CentralRegion security group rule list
-+--------------------------------------+-------------+-----------+------------+--------------------------------------+--------------------------------------+
-| ID                                   | IP Protocol | IP Range  | Port Range | Remote Security Group                | Security Group                       |
-+--------------------------------------+-------------+-----------+------------+--------------------------------------+--------------------------------------+
-| 791cc717-3a7d-4148-9c2c-b20b8bbd7681 | None        | None      |            | None                                 | 383b75ab-5b6a-4985-b3cf-41fa70fec3cb |
-| 7e5fbc92-708c-433e-99ce-95e4a2326b5f | None        | None      |            | 383b75ab-5b6a-4985-b3cf-41fa70fec3cb | 383b75ab-5b6a-4985-b3cf-41fa70fec3cb |
-| 8b1a9484-9542-49ff-aa47-0cb23130306d | None        | None      |            | 383b75ab-5b6a-4985-b3cf-41fa70fec3cb | 383b75ab-5b6a-4985-b3cf-41fa70fec3cb |
-| 9e6ef456-ee80-45df-bf68-fc25219a67a3 | icmp        | 0.0.0.0/0 |            | None                                 | 383b75ab-5b6a-4985-b3cf-41fa70fec3cb |
-| bbfba375-0bd2-4945-a0f0-6e0d76b31a9b | None        | None      |            | None                                 | 383b75ab-5b6a-4985-b3cf-41fa70fec3cb |
-+--------------------------------------+-------------+-----------+------------+--------------------------------------+--------------------------------------+
-
 
 ```
 
