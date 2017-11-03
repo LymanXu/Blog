@@ -70,3 +70,20 @@ Registry registry = LocateRegistry.getRegistry();
 registry.bind("Hello", stub);
 ```
 通过使用Registry bind a name to a remote object's stub, 使得client在lookup(name)的时候可以obtain stub.
+
+## 3.2 Client class
+'Client class'要做的事儿：
+
+1. 从对应的server host上拿到stub,查找the remote object's stub by name
+2. 使用stub 调用remote object 的方法
+```buildoutcfg
+        try {
+            Registry registry = LocateRegistry.getRegistry(host);
+            Hello stub = (Hello) registry.lookup("Hello");
+            String response = stub.sayHello();
+            System.out.println("response: " + response);
+        } catch (Exception e) {
+            System.err.println("Client exception: " + e.toString());
+            e.printStackTrace();
+        }
+```

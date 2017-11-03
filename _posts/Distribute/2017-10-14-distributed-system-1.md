@@ -35,6 +35,14 @@ a机器采用小端存储对于0x0005,将数据的高字节放到存储空间的
 对于非char类型的数据，在发送前需要转化成大端模式，接受网络数据时按主机环境接受。
 
 # 2. 通信
+## 2.1 通信模型
+4中广泛的通信模型
+
+1. 远程过程调用 remote procedure call
+2. 远程方法调用 remote method invocation
+3. 面向消息中间件 message-oriented middleware
+4. 流 steam
+
 ## 2.1 RPC
 ### 2.1.1 what's rpc
 * A type of client/server communication
