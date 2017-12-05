@@ -9,7 +9,7 @@ baseurl: "/Blog"
 description: Everyday is different, 一生以歌!
 meta_description: 愿一生以歌投入每天永不变
 motto: A little step everyday
-banner: 学而不思则罔，思而不学则殆。
+banner: Everyday is different, 一生以歌!
 
 #permalink: /:categories/:year/:month/:day/:title/
 permalink: /:year/:month/:day/:title/
