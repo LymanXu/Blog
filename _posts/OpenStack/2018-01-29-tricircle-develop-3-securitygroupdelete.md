@@ -24,10 +24,10 @@ tag: 开发笔记
 
 ## 2.2 Top-bottom id不一致（bug）
 ** 对于Security group Top-bottom对应的映射在resource_routing中id不同（遗留bug） **
-![Security](/images/2018-01-29-1.jpg "安全组信息")
+![Security]({{'/styles/images/OpenStack/2018-01-29-1.jpg' | prepend: site.baseurl }} "安全组信息")
 上图说明了相关联的安全组在CentralRegion和RegionOne中的信息
 
-![Security](/images/2018-01-29-2.jpg "资源映射")
+![Security]({{'/styles/images/OpenStack/2018-01-29-2.jpg' | prepend: site.baseurl }}  "资源映射")
 而在resource_routing表这条security group映射中的bottom_id并不是真实的，所以要检查security group资源的创建同步，以及resource_routing信息的维持。
 
 ## 2.3 原有security group删除的逻辑测试结果
@@ -41,8 +41,8 @@ Result：CentralRegion中成功删除，而此时的vm’s port依然还在绑�
 1.	资源Top-bottom的同步删除没有实现
 2.	安全组删除前没有进行port绑定检查（或失败），因为securitygroupportbindings中没有对port绑定的安全组进行更新，导致安全组删除前的port bingdings检查无效。
 
-![Security](/images/2018-01-29-3.jpg "port绑定的security group")
-![Security](/images/2018-01-29-4.jpg "port绑定的security group")
+![Security]({'/styles/images/OpenStack/2018-01-29-3.jpg' | prepend: site.baseurl }} "port绑定的security group")
+![Security]({'/styles/images/OpenStack/2018-01-29-4.jpg' | prepend: site.baseurl }} "port绑定的security group")
 
 # 3. Solution
 ## 3.1 线上环境测试
