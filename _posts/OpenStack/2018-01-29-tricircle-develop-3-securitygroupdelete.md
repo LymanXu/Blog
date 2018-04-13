@@ -41,8 +41,8 @@ Result：CentralRegion中成功删除，而此时的vm’s port依然还在绑�
 1.	资源Top-bottom的同步删除没有实现
 2.	安全组删除前没有进行port绑定检查（或失败），因为securitygroupportbindings中没有对port绑定的安全组进行更新，导致安全组删除前的port bingdings检查无效。
 
-![Security]({'/styles/images/OpenStack/2018-01-29-3.jpg' | prepend: site.baseurl }} "port绑定的security group")
-![Security]({'/styles/images/OpenStack/2018-01-29-4.jpg' | prepend: site.baseurl }} "port绑定的security group")
+![Security]({{'/styles/images/OpenStack/2018-01-29-3.jpg' | prepend: site.baseurl }} "port绑定的security group")
+![Security]({{'/styles/images/OpenStack/2018-01-29-4.jpg' | prepend: site.baseurl }} "port绑定的security group")
 
 # 3. Solution
 ## 3.1 线上环境测试
