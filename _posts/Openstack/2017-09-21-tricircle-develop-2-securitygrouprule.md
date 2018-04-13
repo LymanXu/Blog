@@ -1,13 +1,13 @@
 ---
 layout: post
 #标题配置
-title:  Tricircle development(二)－－security group
+title:  Tricircle development[2]--Security group rule
 #时间配置
 date:   2017-09-21 09:58:00 +0800
 #大类配置
-categories: Tricircle
+categories: Openstack
 #小类配置
-tag: Development notes
+tag: 开发笔记
 ---
 
 * content

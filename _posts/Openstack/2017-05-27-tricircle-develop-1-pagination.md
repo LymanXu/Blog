@@ -1,13 +1,13 @@
 ---
 layout: post
 #标题配置
-title:  Tricircle development(一)－－pagination
+title:  Tricircle development[1]--Pagination
 #时间配置
 date:   2017-05-27 10:49:00 +0800
 #大类配置
-categories: Tricircle
+categories: Openstack
 #小类配置
-tag: Development notes
+tag: 开发笔记
 ---
 
 * content
